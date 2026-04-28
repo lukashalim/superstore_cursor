@@ -95,7 +95,7 @@ export function StateMapFilter({ states, stateRegionMap }: StateMapFilterProps) 
   };
 
   const availableStates = useMemo(() => new Set(states), [states]);
-  const projection = useMemo(() => geoAlbersUsa().scale(1200).translate([487.5, 305]), []);
+  const projection = useMemo(() => geoAlbersUsa().scale(920).translate([487.5, 305]), []);
   const pathGenerator = useMemo(() => geoPath(projection), [projection]);
 
   const geographies = useMemo(() => {
@@ -136,8 +136,8 @@ export function StateMapFilter({ states, stateRegionMap }: StateMapFilterProps) 
           Active: {activeState === "All" ? "All" : `${activeState} (${activeRegion})`}
         </span>
       </div>
-      <div className="overflow-x-auto rounded-xl bg-slate-100 p-3">
-        <svg viewBox="0 0 975 610" className="min-w-[800px]">
+      <div className="rounded-xl bg-slate-100 p-3">
+        <svg viewBox="0 0 975 610" className="h-[230px] w-full">
           <g>
             {geographies.map((geo) => {
               const fips = String(geo.id).padStart(2, "0");
