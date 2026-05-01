@@ -1,11 +1,13 @@
 import { type Metadata } from "next";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { ExportPptxButton } from "@/components/dashboard/ExportPptxButton";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightList } from "@/components/dashboard/InsightList";
 import { StateMapFilter } from "@/components/dashboard/StateMapFilter";
 import { getDescriptiveMetrics } from "@/lib/analytics/descriptiveMetrics";
 import { getPrescriptiveMetrics } from "@/lib/analytics/prescriptiveMetrics";
 import { loadSuperstore } from "@/lib/data/loadSuperstore";
+import { getAnnotationInsights } from "@/lib/export/annotationStoryline";
 import { parseDescriptiveFilters } from "@/lib/filters/descriptiveFilters";
 
 interface PageProps {
@@ -25,27 +27,7 @@ export default async function AnnotationsDashboardPage({ searchParams }: PagePro
   const descriptive = getDescriptiveMetrics(rows, filters);
   const prescriptive = getPrescriptiveMetrics(rows, filters);
 
-  const annotationInsights = [
-    {
-      title: "Insight 1: Margin Pressure",
-      detail: `Profit ratio is ${descriptive.profitRatio.toFixed(
-        2
-      )}%. Prioritize low-margin sub-categories identified in prescriptive view.`,
-      impact: "High" as const,
-    },
-    {
-      title: "Insight 2: Shipping Friction",
-      detail: `Average ship time is ${descriptive.daysToShip.toFixed(
-        2
-      )} days. Focus process improvements where cycle times exceed regional peers.`,
-      impact: "Medium" as const,
-    },
-    {
-      title: "Insight 3: Revenue Concentration",
-      detail: `Sales currently total $${descriptive.salesTotal.toLocaleString()}. Use regional action plans to preserve growth in top areas.`,
-      impact: "Medium" as const,
-    },
-  ];
+  const annotationInsights = getAnnotationInsights(descriptive);
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-8 md:px-12">
@@ -56,7 +38,10 @@ export default async function AnnotationsDashboardPage({ searchParams }: PagePro
         </p>
       </header>
 
-      <DashboardTabs activeTab="annotations" />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <DashboardTabs activeTab="annotations" />
+        <ExportPptxButton tab="annotations" />
+      </div>
       <FilterBar
         regions={descriptive.filterOptions.regions}
         states={descriptive.filterOptions.states}

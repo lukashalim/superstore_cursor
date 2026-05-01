@@ -1,5 +1,6 @@
 import { type Metadata } from "next";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { ExportPptxButton } from "@/components/dashboard/ExportPptxButton";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightList } from "@/components/dashboard/InsightList";
 import { PrescriptiveScatter } from "@/components/dashboard/PrescriptiveScatter";
@@ -35,7 +36,10 @@ export default async function PrescriptiveDashboardPage({ searchParams }: PagePr
         </p>
       </header>
 
-      <DashboardTabs activeTab="prescriptive" />
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <DashboardTabs activeTab="prescriptive" />
+        <ExportPptxButton tab="prescriptive" />
+      </div>
       <FilterBar
         regions={baseMetrics.filterOptions.regions}
         states={baseMetrics.filterOptions.states}

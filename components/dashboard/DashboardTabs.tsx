@@ -13,7 +13,7 @@ const tabs: Array<{ id: DashboardTabsProps["activeTab"]; label: string; href: st
 
 export function DashboardTabs({ activeTab }: DashboardTabsProps) {
   return (
-    <nav className="mb-5 flex flex-wrap gap-2">
+    <nav className="flex flex-wrap gap-2">
       {tabs.map((tab) => (
         <Link
           key={tab.id}
