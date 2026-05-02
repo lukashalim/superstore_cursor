@@ -7,7 +7,8 @@ import sys
 import traceback
 from http.server import BaseHTTPRequestHandler
 
-_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Colocate imports under api/ so the function bundle always includes excel_export/.
+_ROOT = os.path.dirname(os.path.abspath(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
@@ -37,7 +38,3 @@ class handler(BaseHTTPRequestHandler):
 
     def log_message(self, _format: str, *_args: object) -> None:
         return
-
-
-# Some local runners expect `app = handler`
-app = handler

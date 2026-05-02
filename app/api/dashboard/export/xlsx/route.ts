@@ -15,8 +15,11 @@ import { loadSuperstore } from "@/lib/data/loadSuperstore";
 /**
  * Excel export uses Python + XlsxWriter.
  * - Local `next dev`: install deps with `pip install -r requirements.txt`, then ensure `python`
- *   is on PATH (override with PYTHON_PATH). The route spawns `excel_export/cli.py`.
+ *   is on PATH (override with PYTHON_PATH). The route spawns `api/cli.py`.
  * - Vercel: POST is forwarded to `/api/build_excel` (Python runtime) when VERCEL is set.
+ *   Uses the incoming request URL as the fetch origin (custom domains). If Deployment
+ *   Protection is on, set VERCEL_AUTOMATION_BYPASS_SECRET in the project and the same
+ *   value here so server-to-server calls are allowed.
  */
 export const runtime = "nodejs";
 
@@ -28,16 +31,18 @@ function filenameFor(tab: string, isoDate: string): string {
   return `superstore-${tab}-${safe}.xlsx`;
 }
 
-async function buildWorkbookViaHttp(payload: unknown): Promise<Buffer> {
-  const host = process.env.VERCEL_URL;
-  if (!host) {
-    throw new Error("VERCEL_URL is not set");
+async function buildWorkbookViaHttp(payload: unknown, requestUrl: string): Promise<Buffer> {
+  const target = new URL("/api/build_excel", requestUrl).toString();
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+  if (bypass) {
+    headers["x-vercel-protection-bypass"] = bypass;
   }
-  const base = host.startsWith("http") ? host : `https://${host}`;
-  const res = await fetch(`${base}/api/build_excel`, {
+  const res = await fetch(target, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
+    cache: "no-store",
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -48,7 +53,7 @@ async function buildWorkbookViaHttp(payload: unknown): Promise<Buffer> {
 
 function buildWorkbookViaSubprocess(payload: unknown): Promise<Buffer> {
   const pythonBin = process.env.PYTHON_PATH ?? "python";
-  const cliPath = path.join(process.cwd(), "excel_export", "cli.py");
+  const cliPath = path.join(process.cwd(), "api", "cli.py");
   const json = JSON.stringify(payload);
   if (Buffer.byteLength(json, "utf8") > MAX_PAYLOAD_BYTES) {
     return Promise.reject(new Error("Export payload too large"));
@@ -77,7 +82,7 @@ function buildWorkbookViaSubprocess(payload: unknown): Promise<Buffer> {
       if (code !== 0) {
         reject(
           new Error(
-            `Python excel_export/cli.py exited ${code}: ${Buffer.concat(err).toString("utf8").slice(0, 2000)}`
+            `Python api/cli.py exited ${code}: ${Buffer.concat(err).toString("utf8").slice(0, 2000)}`
           )
         );
         return;
@@ -120,7 +125,7 @@ export async function GET(request: Request): Promise<Response> {
       annotationInsights,
     });
 
-    const buffer = await buildWorkbookBuffer(payload);
+    const buffer = await buildWorkbookBuffer(payload, request.url);
     const filename = filenameFor(query.tab, exportedAtIsoDate);
     const body = new Uint8Array(buffer);
 

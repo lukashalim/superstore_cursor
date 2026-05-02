@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/build_excel.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{node_modules/**,.next/**,public/**,app/**,components/**,lib/**,tableau_superstore/**,sample*.xls,package*.json,*.md,tsconfig.json,eslint.config.mjs,postcss.config.mjs,next.config.ts,AGENTS.md,CLAUDE.md}"
+    },
+    "app/api/dashboard/export/xlsx/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}
