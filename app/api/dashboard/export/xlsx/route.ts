@@ -95,9 +95,9 @@ function buildWorkbookViaSubprocess(payload: unknown): Promise<Buffer> {
   });
 }
 
-async function buildWorkbookBuffer(payload: unknown): Promise<Buffer> {
+async function buildWorkbookBuffer(payload: unknown, requestUrl: string): Promise<Buffer> {
   if (process.env.VERCEL) {
-    return buildWorkbookViaHttp(payload);
+    return buildWorkbookViaHttp(payload, requestUrl);
   }
   return buildWorkbookViaSubprocess(payload);
 }
