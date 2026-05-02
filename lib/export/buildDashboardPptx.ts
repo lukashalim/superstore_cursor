@@ -3,8 +3,15 @@ import type { DescriptiveMetrics } from "@/lib/analytics/descriptiveMetrics";
 import type { PrescriptiveMetrics } from "@/lib/analytics/prescriptiveMetrics";
 import type { DescriptiveFilters } from "@/lib/filters/descriptiveFilters";
 import { getAnnotationInsights } from "@/lib/export/annotationStoryline";
+import {
+  type DashboardExportTab,
+  buildExportPrimaryTitle,
+  exportCreatedLine,
+  filterLines,
+  tabTitle,
+} from "@/lib/export/exportHeadings";
 
-export type DashboardExportTab = "descriptive" | "prescriptive" | "annotations";
+export type { DashboardExportTab };
 
 type ChartData = PptxGenJS.OptsChartData[];
 
@@ -31,58 +38,40 @@ function fmtDelta(n: number): string {
   return `${sign}${n.toFixed(2)}`;
 }
 
-function tabTitle(tab: DashboardExportTab): string {
-  switch (tab) {
-    case "descriptive":
-      return "Super: Descriptive";
-    case "prescriptive":
-      return "Super: Prescriptive";
-    case "annotations":
-      return "Super: Annotations";
-    default:
-      return tab;
-  }
-}
-
-function filterLines(filters: DescriptiveFilters): string[] {
-  const y = filters.year !== undefined ? String(filters.year) : "All";
-  return [
-    `Region: ${filters.region}`,
-    `State: ${filters.state}`,
-    `Segment: ${filters.segment}`,
-    `Category: ${filters.category}`,
-    `Year: ${y}`,
-  ];
-}
-
 function addTitleSlide(
   pptx: PptxGenJS,
   tab: DashboardExportTab,
-  exportedAt: string
+  filters: DescriptiveFilters,
+  descriptive: DescriptiveMetrics,
+  exportedAtIsoDate: string
 ): void {
   const slide = pptx.addSlide();
-  slide.addText("Superstore Dashboard", {
+  const primaryTitle = buildExportPrimaryTitle(filters, descriptive);
+
+  slide.addText(primaryTitle, {
     x: 0.5,
-    y: 1.6,
+    y: 0.85,
     w: 9,
-    h: 1,
-    fontSize: 32,
+    h: 2.35,
+    fontSize: 24,
     bold: true,
     color: "0F172A",
+    valign: "top",
+    wrap: true,
   });
   slide.addText(tabTitle(tab), {
     x: 0.5,
-    y: 2.7,
+    y: 3.35,
     w: 9,
-    h: 0.6,
+    h: 0.55,
     fontSize: 18,
     color: "475569",
   });
-  slide.addText(`Exported ${exportedAt}`, {
+  slide.addText(exportCreatedLine(exportedAtIsoDate), {
     x: 0.5,
-    y: 5,
+    y: 5.05,
     w: 9,
-    h: 0.4,
+    h: 0.45,
     fontSize: 11,
     color: "64748B",
   });
@@ -418,11 +407,13 @@ export async function buildDashboardPptx(params: {
 }): Promise<Buffer> {
   const pptx = new PptxGenJS();
   pptx.layout = "LAYOUT_16x9";
-  pptx.title = "Superstore Dashboard";
 
   const { tab, filters, descriptive, prescriptive, exportedAtIsoDate } = params;
 
-  addTitleSlide(pptx, tab, exportedAtIsoDate);
+  const primaryTitle = buildExportPrimaryTitle(filters, descriptive);
+  pptx.title = `${primaryTitle} — ${tabTitle(tab)}`;
+
+  addTitleSlide(pptx, tab, filters, descriptive, exportedAtIsoDate);
   addFilterSlide(pptx, filters);
 
   if (tab === "descriptive") {

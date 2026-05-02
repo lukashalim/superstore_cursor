@@ -1,6 +1,7 @@
 import { type Metadata } from "next";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { ExportPptxButton } from "@/components/dashboard/ExportPptxButton";
+import { ExportXlsxButton } from "@/components/dashboard/ExportXlsxButton";
 import { FilterBar } from "@/components/dashboard/FilterBar";
 import { InsightList } from "@/components/dashboard/InsightList";
 import { StateMapFilter } from "@/components/dashboard/StateMapFilter";
@@ -40,7 +41,10 @@ export default async function AnnotationsDashboardPage({ searchParams }: PagePro
 
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <DashboardTabs activeTab="annotations" />
-        <ExportPptxButton tab="annotations" />
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportPptxButton tab="annotations" />
+          <ExportXlsxButton tab="annotations" />
+        </div>
       </div>
       <FilterBar
         regions={descriptive.filterOptions.regions}

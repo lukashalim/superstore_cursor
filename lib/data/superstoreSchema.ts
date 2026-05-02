@@ -37,4 +37,4 @@ export const superstoreRowSchema = z.object({
   profit: numericLike,
 });
 
-export interface SuperstoreRow extends z.infer<typeof superstoreRowSchema> {}
+export type SuperstoreRow = z.infer<typeof superstoreRowSchema>;

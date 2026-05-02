@@ -8,7 +8,7 @@ export const descriptiveFiltersSchema = z.object({
   year: z.coerce.number().int().optional(),
 });
 
-export interface DescriptiveFilters extends z.infer<typeof descriptiveFiltersSchema> {}
+export type DescriptiveFilters = z.infer<typeof descriptiveFiltersSchema>;
 
 function firstValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
