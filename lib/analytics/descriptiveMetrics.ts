@@ -14,6 +14,15 @@ export interface TrendComparisonPoint {
   pp: number;
 }
 
+/** Line-level rows for a trend chart month, for drill-down UI (CP or PP year). */
+export interface TrendMonthTransaction {
+  rowId: string;
+  orderId: string;
+  productName: string;
+  customerName: string;
+  orderDateIso: string;
+}
+
 export interface RegionPoint {
   region: string;
   sales: number;
@@ -33,6 +42,13 @@ export interface DescriptiveMetrics {
     sales: TrendComparisonPoint[];
     profitRatio: TrendComparisonPoint[];
     daysToShip: TrendComparisonPoint[];
+  };
+  /** CP = comparison year, PP = prior year; index 0 = January. */
+  trendDrilldown: {
+    cpYear: number;
+    ppYear: number;
+    cpByMonth: TrendMonthTransaction[][];
+    ppByMonth: TrendMonthTransaction[][];
   };
   regionComparison: RegionPoint[];
   filterOptions: {
@@ -164,6 +180,30 @@ export function getDescriptiveMetrics(
   const comparisonYear = filters.year ?? availableYears[availableYears.length - 1] ?? new Date().getFullYear();
   const trendComparison = buildTrendComparison(baseRows, comparisonYear);
 
+  const previousYear = comparisonYear - 1;
+  const cpYearRowsForDrilldown = baseRows.filter((row) => row.orderDate.getFullYear() === comparisonYear);
+  const ppYearRowsForDrilldown = baseRows.filter((row) => row.orderDate.getFullYear() === previousYear);
+
+  const mapMonthRows = (monthRows: SuperstoreRow[]): TrendMonthTransaction[] =>
+    monthRows.map((row) => ({
+      rowId: row.rowId,
+      orderId: row.orderId,
+      productName: row.productName,
+      customerName: row.customerName,
+      orderDateIso: row.orderDate.toISOString(),
+    }));
+
+  const trendDrilldown: DescriptiveMetrics["trendDrilldown"] = {
+    cpYear: comparisonYear,
+    ppYear: previousYear,
+    cpByMonth: monthLabels.map((_, monthIndex) =>
+      mapMonthRows(cpYearRowsForDrilldown.filter((row) => row.orderDate.getMonth() === monthIndex))
+    ),
+    ppByMonth: monthLabels.map((_, monthIndex) =>
+      mapMonthRows(ppYearRowsForDrilldown.filter((row) => row.orderDate.getMonth() === monthIndex))
+    ),
+  };
+
   const regions = ["West", "East", "Central", "South"];
   const regionComparison = regions.map((region) => {
     const regionRows = filterRows(rows, { ...filters, region });
@@ -194,6 +234,7 @@ export function getDescriptiveMetrics(
     daysToShipDeltaVsRegionAvg: round(daysToShip - shipRegionAvg),
     trend,
     trendComparison,
+    trendDrilldown,
     regionComparison,
     filterOptions: {
       regions: [...new Set(rows.map((row) => row.region))].sort(),

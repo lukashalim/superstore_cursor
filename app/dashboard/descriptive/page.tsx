@@ -7,7 +7,7 @@ import { FilterBar } from "@/components/dashboard/FilterBar";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { StateMapFilter } from "@/components/dashboard/StateMapFilter";
 import { RegionComparison } from "@/components/dashboard/RegionComparison";
-import { TrendChart } from "@/components/dashboard/TrendChart";
+import { TrendChartsSection } from "@/components/dashboard/TrendChartsSection";
 import { getDescriptiveMetrics } from "@/lib/analytics/descriptiveMetrics";
 import { loadSuperstore } from "@/lib/data/loadSuperstore";
 import { parseDescriptiveFilters } from "@/lib/filters/descriptiveFilters";
@@ -82,10 +82,11 @@ export default async function DescriptiveDashboardPage({ searchParams }: PagePro
         />
       </section>
 
-      <section className="mt-5 grid gap-4 lg:grid-cols-2">
-        <TrendChart title="Sales Trend" data={metrics.trendComparison.sales} />
-        <TrendChart title="Profit Ratio Trend" data={metrics.trendComparison.profitRatio} unit="%" />
-      </section>
+      <TrendChartsSection
+        salesTrend={metrics.trendComparison.sales}
+        profitRatioTrend={metrics.trendComparison.profitRatio}
+        drilldown={metrics.trendDrilldown}
+      />
 
       <section className="mt-5 grid gap-4 lg:grid-cols-3">
         <BulletMetric title="Sales Bullet" value={metrics.salesTotal} target={900000} />

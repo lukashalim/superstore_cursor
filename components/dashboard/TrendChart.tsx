@@ -1,5 +1,9 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
+export type TrendPeriod = "cp" | "pp";
+
 interface TrendChartProps {
   title: string;
   data: Array<{
@@ -8,11 +12,11 @@ interface TrendChartProps {
     pp: number;
   }>;
   unit?: string;
+  /** When set, CP (blue) and PP (gray) vertices open drill-down for that period and month index. */
+  onMonthPointClick?: (period: TrendPeriod, monthIndex: number) => void;
 }
 
-import { useMemo, useState } from "react";
-
-export function TrendChart({ title, data, unit = "" }: TrendChartProps) {
+export function TrendChart({ title, data, unit = "", onMonthPointClick }: TrendChartProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const height = 180;
   const width = 700;
@@ -43,6 +47,26 @@ export function TrendChart({ title, data, unit = "" }: TrendChartProps) {
           return `${x},${y}`;
         })
         .join(" "),
+    [data, height, max, min, range, width]
+  );
+
+  const cpVertices = useMemo(
+    () =>
+      data.map((entry, index) => {
+        const x = (index / Math.max(data.length - 1, 1)) * width;
+        const y = height - ((entry.cp - min) / range) * height;
+        return { x, y };
+      }),
+    [data, height, max, min, range, width]
+  );
+
+  const ppVertices = useMemo(
+    () =>
+      data.map((entry, index) => {
+        const x = (index / Math.max(data.length - 1, 1)) * width;
+        const y = height - ((entry.pp - min) / range) * height;
+        return { x, y };
+      }),
     [data, height, max, min, range, width]
   );
 
@@ -86,6 +110,56 @@ export function TrendChart({ title, data, unit = "" }: TrendChartProps) {
               strokeDasharray="4 4"
             />
           )}
+          {onMonthPointClick &&
+            cpVertices.map((vertex, index) => (
+              <g key={`cp-${data[index]?.month ?? index}`}>
+                <circle
+                  cx={vertex.x}
+                  cy={vertex.y}
+                  r={14}
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMonthPointClick("cp", index);
+                  }}
+                />
+                <circle
+                  cx={vertex.x}
+                  cy={vertex.y}
+                  r={5}
+                  fill="#ffffff"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  className="pointer-events-none"
+                />
+              </g>
+            ))}
+          {onMonthPointClick &&
+            ppVertices.map((vertex, index) => (
+              <g key={`pp-${data[index]?.month ?? index}`}>
+                <circle
+                  cx={vertex.x}
+                  cy={vertex.y}
+                  r={14}
+                  fill="transparent"
+                  className="cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMonthPointClick("pp", index);
+                  }}
+                />
+                <circle
+                  cx={vertex.x}
+                  cy={vertex.y}
+                  r={5}
+                  fill="#ffffff"
+                  stroke="#64748b"
+                  strokeWidth={2}
+                  className="pointer-events-none"
+                />
+              </g>
+            ))}
         </svg>
         {activeIndex !== null && (
           <div className="pointer-events-none absolute right-2 top-2 rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-xs text-slate-700 shadow-sm">
@@ -101,7 +175,11 @@ export function TrendChart({ title, data, unit = "" }: TrendChartProps) {
           </div>
         )}
       </div>
-      <div className="mt-2 text-xs text-slate-500">Hover to inspect monthly CP vs PP values.</div>
+      <div className="mt-2 text-xs text-slate-500">
+        {onMonthPointClick
+          ? "Hover to inspect values. Click a blue (CP) or gray (PP) point for line items; click outside the charts and detail panel to close."
+          : "Hover to inspect monthly CP vs PP values."}
+      </div>
       <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
         {data.slice(-6).map((entry) => (
           <span key={entry.month} className="rounded bg-slate-100 px-2 py-1">
